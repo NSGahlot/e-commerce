@@ -1,28 +1,34 @@
 import { useEffect, useRef, useState } from "react";
 
 export default function App() {
-  const idRef = useRef(null);
-  const [productsData, setProductsData] = useState(() => {
-    const storedProducts = localStorage.getItem(idRef.current);
-    return storedProducts ? JSON.parse(storedProducts) : [];
-  });
+  const [productsData, setProductsData] = useState([]);
 
   function addProduct(newProduct) {
-    setProductsData((prev) => [...prev, newProduct]);
-    idRef.current = newProduct.productId;
-  }
-  // console.log(productsData);
-
-  function deleteProduct(id) {
-    setProductsData(productsData.filter((product) => product.productId !== id));
+    localStorage.setItem(newProduct.productId, JSON.stringify(newProduct));
+    setProductsData((prevData) => [...prevData, newProduct]);
   }
 
   useEffect(() => {
-    if (!idRef.current) {
-      return;
-    }
-    localStorage.setItem(idRef.current, JSON.stringify(productsData));
-  }, [productsData]);
+    const data = [];
+    Object.keys(localStorage).forEach((key) => {
+      try {
+        const item = JSON.parse(localStorage.getItem(key));
+        if (item && item.productId) {
+          data.push(item);
+        }
+      } catch (error) {
+        console.error(`Error parsing item with key "${key}":`, error);
+      }
+    });
+
+    setProductsData(data);
+  }, []);
+
+  function deleteProduct(id) {
+    localStorage.removeItem(id);
+    setProductsData(productsData.filter((product) => product.productId !== id));
+  }
+
   return (
     <div>
       <AddProduct onaddProduct={addProduct} />
